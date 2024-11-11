@@ -1,0 +1,125 @@
+Recuperações simples com SELECT
+Recuperar todos os clientes com suas informações de pessoa (nome e endereço):
+
+SELECT Cliente.idCliente, Pessoa.Nome, Pessoa.Endereco
+FROM Cliente
+JOIN Pessoa ON Cliente.idPessoa = Pessoa.idPessoa;
+Listar todos os produtos com suas categorias e valores:
+
+SELECT idProduto, Categoria, Descricao, Valor
+FROM Produto;
+2. Filtros com WHERE
+Selecionar todos os clientes que são pessoas físicas:
+
+SELECT PessoaFisica.idPessoaFisica, Pessoa.Nome, Pessoa.Endereco, PessoaFisica.CPF
+FROM PessoaFisica
+JOIN Pessoa ON PessoaFisica.idPessoa = Pessoa.idPessoa
+WHERE PessoaFisica.CPF IS NOT NULL;
+Selecionar todos os pedidos com status "Em Processamento":
+
+SELECT idPedido, StatusPedido, Descricao, Frete
+FROM Pedido
+WHERE StatusPedido = 'Em Processamento';
+3. Expressões para gerar atributos derivados
+Calcular o valor total do pedido considerando o valor dos produtos e suas quantidades:
+
+SELECT Pedido.idPedido, SUM(Produto.Valor * Relacao_Produto_Pedido.Quantidade) AS ValorTotal
+FROM Pedido
+JOIN Relacao_Produto_Pedido ON Pedido.idPedido = Relacao_Produto_Pedido.Pedido_idPedido
+JOIN Produto ON Relacao_Produto_Pedido.Produto_idProduto = Produto.idProduto
+GROUP BY Pedido.idPedido;
+Calcular o total de estoque de cada produto em todos os locais:
+
+SELECT Produto.idProduto, Produto.Descricao, SUM(Produto_has_Estoque.Quantidade) AS TotalEstoque
+FROM Produto
+JOIN Produto_has_Estoque ON Produto.idProduto = Produto_has_Estoque.Produto_idProduto
+GROUP BY Produto.idProduto;
+4. Ordenações dos dados com ORDER BY
+Listar todos os produtos em ordem crescente de valor:
+
+SELECT idProduto, Descricao, Valor
+FROM Produto
+ORDER BY Valor ASC;
+Listar todos os clientes em ordem alfabética:
+
+SELECT Cliente.idCliente, Pessoa.Nome, Pessoa.Endereco
+FROM Cliente
+JOIN Pessoa ON Cliente.idPessoa = Pessoa.idPessoa
+ORDER BY Pessoa.Nome ASC;
+5. Condições de filtros aos grupos com HAVING
+Listar todos os pedidos cujo valor total excede R$ 500:
+
+SELECT Pedido.idPedido, SUM(Produto.Valor * Relacao_Produto_Pedido.Quantidade) AS ValorTotal
+FROM Pedido
+JOIN Relacao_Produto_Pedido ON Pedido.idPedido = Relacao_Produto_Pedido.Pedido_idPedido
+JOIN Produto ON Relacao_Produto_Pedido.Produto_idProduto = Produto.idProduto
+GROUP BY Pedido.idPedido
+HAVING ValorTotal > 500;
+Listar fornecedores que fornecem mais de 10 tipos de produtos:
+
+SELECT Fornecedor.idFornecedor, Fornecedor.RazaoSocial, COUNT(DISTINCT Disponibilizando_um_Produto.Produto_idProduto) AS TotalProdutos
+FROM Fornecedor
+JOIN Disponibilizando_um_Produto ON Fornecedor.idFornecedor = Disponibilizando_um_Produto.Fornecedor_idFornecedor
+GROUP BY Fornecedor.idFornecedor
+HAVING TotalProdutos > 10;
+6. Junções entre tabelas para fornecer uma perspectiva mais complexa
+Listar todas as informações de pedidos, incluindo cliente e forma de pagamento:
+
+SELECT Pedido.idPedido, Pessoa.Nome AS Cliente, Pedido.StatusPedido, Pedido.Descricao, FormaPagamento.TipoPagamento
+FROM Pedido
+JOIN Cliente ON Pedido.idCliente = Cliente.idCliente
+JOIN Pessoa ON Cliente.idPessoa = Pessoa.idPessoa
+JOIN PedidoFormaPagamento ON Pedido.idPedido = PedidoFormaPagamento.idPedido
+JOIN FormaPagamento ON PedidoFormaPagamento.idFormaPagamento = FormaPagamento.idFormaPagamento;
+Listar todos os produtos vendidos por terceiros com a quantidade disponível:
+
+SELECT Produto.Descricao AS Produto, Terceiro_Vendedor.RazaoSocial AS Vendedor, Produtos_por_Vendedor.Quantidade
+FROM Produtos_por_Vendedor
+JOIN Produto ON Produtos_por_Vendedor.Produto_idProduto = Produto.idProduto
+JOIN Terceiro_Vendedor ON Produtos_por_Vendedor.Terceiro_Vendedor_idTerceiro = Terceiro_Vendedor.idTerceiro_Vendedor;
+Essas consultas SQL abrangem várias operações úteis, desde seleção simples de dados até operações mais avançadas com filtros, junções, e cálculo de atributos derivados. Essas consultas podem servir como base para analisar e explorar os dados de um sistema de e-commerce em um banco de dados relacional.
+
+Total de Pedidos por Cliente
+Este exemplo mostra a quantidade total de pedidos que cada cliente realizou.
+
+
+SELECT Cliente.idCliente, Pessoa.Nome AS NomeCliente, COUNT(Pedido.idPedido) AS TotalPedidos
+FROM Cliente
+JOIN Pessoa ON Cliente.idPessoa = Pessoa.idPessoa
+JOIN Pedido ON Pedido.idCliente = Cliente.idCliente
+GROUP BY Cliente.idCliente, Pessoa.Nome;
+
+ Total Gasto por Pedido
+Este exemplo calcula o valor total de cada pedido, somando o valor de cada produto multiplicado pela quantidade no pedido.
+
+
+SELECT Pedido.idPedido, SUM(Produto.Valor * Relacao_Produto_Pedido.Quantidade) AS ValorTotal
+FROM Pedido
+JOIN Relacao_Produto_Pedido ON Pedido.idPedido = Relacao_Produto_Pedido.Pedido_idPedido
+JOIN Produto ON Relacao_Produto_Pedido.Produto_idProduto = Produto.idProduto
+GROUP BY Pedido.idPedido;
+Exemplo 3: Quantidade de Produtos no Estoque por Local
+Este exemplo exibe o total de quantidade de cada produto em cada local de estoque.
+
+
+SELECT Estoque.Local, Produto.Descricao AS Produto, SUM(Produto_has_Estoque.Quantidade) AS TotalQuantidade
+FROM Produto
+JOIN Produto_has_Estoque ON Produto.idProduto = Produto_has_Estoque.Produto_idProduto
+JOIN Estoque ON Produto_has_Estoque.Estoque_idEstoque = Estoque.idEstoque
+GROUP BY Estoque.Local, Produto.Descricao;
+Exemplo 4: Contagem de Produtos por Categoria
+Este exemplo mostra a quantidade de produtos agrupados por categoria.
+
+
+SELECT Categoria, COUNT(idProduto) AS QuantidadeProdutos
+FROM Produto
+GROUP BY Categoria;
+Exemplo 5: Média de Valor dos Produtos por Categoria
+Este exemplo calcula a média de preço dos produtos agrupados por categoria.
+
+
+SELECT Categoria, AVG(Valor) AS MediaValor
+FROM Produto
+GROUP BY Categoria;
+
+O GROUP BY fornecem insights úteis ao agrupar e sumarizar dados, como o total de pedidos por cliente, o valor total de cada pedido, o inventário de produtos por local, a quantidade de produtos por categoria e a média de valores dos produtos.
